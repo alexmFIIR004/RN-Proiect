@@ -34,56 +34,54 @@ project-name/
 └── requirements.txt       # dependențe Python (dacă aplicabil)
 ```
 
----
-
-##  2. Descrierea Setului de Date
-
-### 2.1 Sursa datelor
-
-* **Origine:** [Descriere sursă date - ex: senzori robot, dataset public, simulare]
-* **Modul de achiziție:** ☐ Senzori reali / ☐ Simulare / ☐ Fișier extern / ☐ Generare programatică
-* **Perioada / condițiile colectării:** [Ex: Noiembrie 2024 - Ianuarie 2025, condiții experimentale specifice]
-
-### 2.2 Caracteristicile dataset-ului
-
-* **Număr total de observații:** [Ex: 15,000]
-* **Număr de caracteristici (features):** [Ex: 12]
-* **Tipuri de date:** ☐ Numerice / ☐ Categoriale / ☐ Temporale / ☐ Imagini
-* **Format fișiere:** ☐ CSV / ☐ TXT / ☐ JSON / ☐ PNG / ☐ Altele: [...]
-
-### 2.3 Descrierea fiecărei caracteristici
-
-| **Caracteristică** | **Tip** | **Unitate** | **Descriere** | **Domeniu valori** |
-|-------------------|---------|-------------|---------------|--------------------|
-| feature_1 | numeric | mm | [...] | 0–150 |
-| feature_2 | categorial | – | [...] | {A, B, C} |
-| feature_3 | numeric | m/s | [...] | 0–2.5 |
-| ... | ... | ... | ... | ... |
-
-**Fișier recomandat:**  `data/README.md`
-
----
 
 ##  3. Analiza Exploratorie a Datelor (EDA) – Sintetic
 
 ### 3.1 Statistici descriptive aplicate
 
-* **Medie, mediană, deviație standard**
-* **Min–max și quartile**
-* **Distribuții pe caracteristici** (histograme)
-* **Identificarea outlierilor** (IQR / percentile)
+**Dataset:** 1000 observații (200 per categorie × 5 categorii: asphalt, carpet, concrete, grass, tile)  
+**Format IMU:** shape `(99, 10)`, dtype `float64` per fișier `.npy`
+
+**Statistici descriptive per caracteristică :**
+
+| Caracteristică | Mean (min–max) | Std Dev | Median | Q25 – Q75 |
+|---------------|----------------|---------|--------|-----------|
+| orientation_x | -0.001 (±0.01) | 0.006–0.12 | -0.002 | -0.02 – 0.01 |
+| orientation_z | -0.44 (±0.73) | 0.07–0.53 | -0.75 | -0.88 – -0.66 |
+| linear_accel_z | 9.74 (7.5–11.3) | 0.07–0.37 | 9.74 | 9.65 – 9.82 |
+
+**Distribuții identificate:**
+* **Quaternion (orientation):** Concentrare în jurul axelor preferențiale; asphalt/carpet au distribuții distincte
+* **Angular velocity:** Simetrie în jurul zero; variabilitate mare în grass (std aprox. 0.35)
+* **Linear acceleration Z:** Distribuție centrată în jurul gravitației (~9.8 m/s²); outlierii sunt în grass/concrete
+
+**Identificarea outlierilor (metoda IQR):**
+* **Total outlieri detectați:** 45,032 (4.5% din toate valorile)
+* **Categorii cu cei mai mulți outlieri:** asphalt (23,716), grass (10,972), tile (5,680)
+* **Caracteristici cu outlieri frecvenți:** orientation_z (7,920), angular_velocity_x/y (6,000), linear_accel
 
 ### 3.2 Analiza calității datelor
 
-* **Detectarea valorilor lipsă** (% pe coloană)
-* **Detectarea valorilor inconsistente sau eronate**
-* **Identificarea caracteristicilor redundante sau puternic corelate**
+**Valori lipsă:** 0% – niciun NaN
+**Valori infinite:** 0 – toate valorile sunt finite 
+**Consistență shape:** 100% – toate fișierele au shape uniform `(99, 10)` sau `(9,10)` pentru concrete
+
+**Corelații între caracteristici:**
+* **Orientare (quaternion):** Componentele sunt parțial corelate (normalizare unitară)
+* **Accelerație vs. categorie:** linear_accel_z variază semnificativ între suprafețe (concrete: 9.73±0.13, grass: 9.74±0.37)
+* **Angular velocity:** Independență relativă între axe; carpet are variabilitate redusă (std ~0.01)
 
 ### 3.3 Probleme identificate
 
-* [exemplu] Feature X are 8% valori lipsă
-* [exemplu] Distribuția feature Y este puternic neuniformă
-* [exemplu] Variabilitate ridicată în clase (class imbalance)
+**Format inconsistent:** Categoria `concrete` folosește shape `(9,10)` -este o diferență în modul de eșantionare (mai puține timestamp-uri).
+
+**Outlieri numerosi în asphalt:** 23,716 outlieri (4.5% din toate valorile) detectați prin IQR. Probabil cauzati de natura suprafetei in sine.
+
+**Variabilitate mare în grass:** std ridicat pentru angular velocity (0.35) și linear_accel (0.55) – teren neuniform cu iarbă.
+
+**Echilibru clase:** Clasele sunt balansate.
+
+**Calitate date:** Zero valori lipsă/infinite. Analiza datelor nu arată erori sau inconsistență la măsurare.
 
 ---
 
@@ -91,17 +89,20 @@ project-name/
 
 ### 4.1 Curățarea datelor
 
-* **Eliminare duplicatelor**
-* **Tratarea valorilor lipsă:**
-  * Feature A: imputare cu mediană
-  * Feature B: eliminare (30% valori lipsă)
-* **Tratarea outlierilor:** IQR / limitare percentile
+* Eliminare duplicatelor: nu au fost identificate duplicate în perechile `*_img.jpg` + `*_imu.npy`.
+* Valori lipsă/infinite: 0% conform EDA.
+* Outlieri: păstrați, deoarece reflectă suprafețele reale; 
 
 ### 4.2 Transformarea caracteristicilor
 
-* **Normalizare:** Min–Max / Standardizare
-* **Encoding pentru variabile categoriale**
-* **Ajustarea dezechilibrului de clasă** (dacă este cazul)
+* Imagini (`*_img.jpg`):
+  * Redimensionare la `224×224` pixeli
+  * Conversie în alb-negru
+  * Calibrare luminozitate cu praguri: `dark_min=0`, `light_max=255`
+  * Normalizare în intervalul `[0,1]`
+* IMU (`*_imu.npy`):
+  * Reshape pentru `concrete`: din `(90,)` în `(9,10)`
+* Clase: echilibrate
 
 ### 4.3 Structurarea seturilor de date
 
@@ -136,9 +137,9 @@ project-name/
 ##  6. Stare Etapă (de completat de student)
 
 - [DA] Structură repository configurată
-- [NU] Dataset analizat (EDA realizată)
-- [NU] Date preprocesate
-- [NU] Seturi train/val/test generate
+- [DA] Dataset analizat (EDA realizată)
+- [DA] Date preprocesate
+- [DA] Seturi train/val/test generate
 - [DA] Documentație actualizată în README + `data/README.md`
 
 ---
