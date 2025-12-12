@@ -9,6 +9,9 @@ from preprocess_imu import preprocess_imu, save_processed_imu
 
 
 def find_pairs(category_dir: Path) -> List[Tuple[Path, Path, str]]:
+    """
+    Găsește perechi de fișiere imagine și IMU într-un director de categorie.
+    """
     pairs = []
     imgs = sorted(category_dir.glob("*_img.jpg"))
     for img in imgs:
@@ -20,10 +23,16 @@ def find_pairs(category_dir: Path) -> List[Tuple[Path, Path, str]]:
 
 
 def ensure_dir(path: Path):
+    """
+    Asigură existența directorului.
+    """
     path.mkdir(parents=True, exist_ok=True)
 
 
 def split_indices(n: int, train_ratio: float, val_ratio: float) -> Tuple[List[int], List[int], List[int]]:
+    """
+    Împarte indicii în seturi de antrenare, validare și testare.
+    """
     train_n = int(n * train_ratio)
     val_n = int(n * val_ratio)
     indices = list(range(n))
@@ -32,6 +41,9 @@ def split_indices(n: int, train_ratio: float, val_ratio: float) -> Tuple[List[in
 
 
 def copy_pair(img: Path, imu: Path, out_dir: Path, stem: str, category: str, stats: dict = None):
+    """
+    Procesează și copiază o pereche de fișiere (imagine + IMU) în directorul de ieșire.
+    """
     ensure_dir(out_dir)
     dark_min = stats.get('dark_min', 0) if stats else 0
     light_max = stats.get('light_max', 255) if stats else 255
@@ -50,6 +62,9 @@ def copy_pair(img: Path, imu: Path, out_dir: Path, stem: str, category: str, sta
 
 
 def compute_train_stats(pairs: List[Tuple[Path, Path, str]], train_idx: List[int]) -> dict:
+    """
+    Calculează statistici pe setul de antrenare pentru normalizare.
+    """
     all_pixels = []
     for i in train_idx[:50]:
         img_path = pairs[i][0]
@@ -67,10 +82,13 @@ def compute_train_stats(pairs: List[Tuple[Path, Path, str]], train_idx: List[int
 
 
 def process_category(category: str, raw_root: Path, processed_root: Path, splits_root: Path, train_ratio: float, val_ratio: float):
+    """
+    Procesează o categorie completă: găsește perechi, împarte datele și le salvează.
+    """
     cat_dir = raw_root / category
     pairs = find_pairs(cat_dir)
     if not pairs:
-        print(f"Warning: no pairs found '{category}'")
+        print(f"Avertisment: nu s-au găsit perechi pentru '{category}'")
         return
 
     n = len(pairs)
@@ -95,36 +113,24 @@ def process_category(category: str, raw_root: Path, processed_root: Path, splits
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Construire set de date")
     
     script_dir = Path(__file__).resolve().parent
     project_root = script_dir.parent.parent
     
-    parser.add_argument("--raw_root", default=str(project_root / "data" / "raw"))
-    parser.add_argument("--processed_root", default=str(project_root / "data" / "processed"))
-    parser.add_argument("--splits_root", default=str(project_root / "data"))
-    parser.add_argument("--categories", nargs="*", default=["asphalt", "carpet", "concrete", "grass", "tile"])
-    parser.add_argument("--train_ratio", type=float, default=0.75)
-    parser.add_argument("--val_ratio", type=float, default=0.1)
-    parser.add_argument("--seed", type=int, default=42)
-
+    parser.add_argument("--raw_dir", type=Path, default=project_root / "data" / "raw")
+    parser.add_argument("--processed_dir", type=Path, default=project_root / "data" / "processed")
+    parser.add_argument("--splits_dir", type=Path, default=project_root / "data")
+    parser.add_argument("--train_ratio", type=float, default=0.7)
+    parser.add_argument("--val_ratio", type=float, default=0.15)
+    
     args = parser.parse_args()
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-
-    raw_root = Path(args.raw_root)
-    processed_root = Path(args.processed_root)
-    splits_root = Path(args.splits_root)
-
-    ensure_dir(processed_root)
-    for sub in [splits_root / "train", splits_root / "validation", splits_root / "test"]:
-        ensure_dir(sub)
-
-    for category in args.categories:
-        process_category(category, raw_root, processed_root, splits_root, args.train_ratio, args.val_ratio)
-
-    print("Done.")
-
+    
+    categories = ["asphalt", "carpet", "concrete", "grass", "tile"]
+    
+    for cat in categories:
+        print(f"Procesare categorie: {cat}")
+        process_category(cat, args.raw_dir, args.processed_dir, args.splits_dir, args.train_ratio, args.val_ratio)
 
 if __name__ == "__main__":
     main()

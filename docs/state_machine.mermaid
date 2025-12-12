@@ -1,0 +1,52 @@
+stateDiagram
+    [*] --> IDLE
+    
+    IDLE --> ACQUIRE_DATA : Start Command / Trigger
+    
+    state ACQUIRE_DATA {
+        [*] --> READ_SENSORS
+        READ_SENSORS --> BUFFER_DATA
+        BUFFER_DATA --> VALIDATE_DATA
+        VALIDATE_DATA --> [*]
+    }
+    
+    ACQUIRE_DATA --> PREPROCESS : Data Valid
+    ACQUIRE_DATA --> ERROR_HANDLER : Sensor Error
+    
+    state PREPROCESS {
+        [*] --> NORMALIZE
+        NORMALIZE --> RESIZE_INTERPOLATE
+        RESIZE_INTERPOLATE --> [*]
+    }
+    
+    PREPROCESS --> INFERENCE
+    
+    state INFERENCE {
+        [*] --> LOAD_MODEL
+        LOAD_MODEL --> PREDICT
+        PREDICT --> CALCULATE_CONFIDENCE
+        CALCULATE_CONFIDENCE --> [*]
+    }
+    
+    INFERENCE --> ACT : Confidence > Threshold
+    INFERENCE --> LOG : Confidence < Threshold (Uncertain)
+    
+    state ACT {
+        [*] --> ADJUST_ROBOT_SPEED
+        ADJUST_ROBOT_SPEED --> UPDATE_CONTROLLER
+        UPDATE_CONTROLLER --> [*]
+    }
+    
+    ACT --> LOG
+    
+    state LOG {
+        [*] --> SAVE_TO_CSV
+        SAVE_TO_CSV --> UPDATE_DASHBOARD
+        UPDATE_DASHBOARD --> [*]
+    }
+    
+    LOG --> IDLE : Cycle Complete
+    
+    ERROR_HANDLER --> LOG : Log Error
+    LOG --> STOP : Critical Failure
+    LOG --> IDLE : Recoverable Error

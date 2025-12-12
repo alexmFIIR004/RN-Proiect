@@ -6,17 +6,23 @@ import numpy as np
 
 
 def load_category_data(category_dir: Path) -> List[np.ndarray]:
+    """
+    Încarcă toate fișierele .npy dintr-un director de categorie.
+    """
     arrays = []
     for npy_file in sorted(category_dir.glob("*_imu.npy")):
         try:
             data = np.load(npy_file)
             arrays.append(data)
         except Exception as e:
-            print(f"Warning: {npy_file}: {e}")
+            print(f"Avertisment: {npy_file}: {e}")
     return arrays
 
 
 def compute_stats(arrays: List[np.ndarray]) -> Dict:
+    """
+    Calculează statistici descriptive pentru o listă de array-uri numpy.
+    """
     if not arrays:
         return {}
     
@@ -56,15 +62,18 @@ def compute_stats(arrays: List[np.ndarray]) -> Dict:
 
 
 def analyze_dataset(raw_root: Path, categories: List[str]) -> Dict:
+    """
+    Analizează întregul set de date, categorie cu categorie.
+    """
     results = {"categories": {}}
     
     for cat in categories:
         cat_dir = raw_root / cat
         if not cat_dir.exists():
-            print(f"Warning: {cat_dir} not found")
+            print(f"Avertisment: {cat_dir} nu a fost găsit")
             continue
         
-        print(f"Analyzing: {cat}")
+        print(f"Analiză: {cat}")
         arrays = load_category_data(cat_dir)
         stats = compute_stats(arrays)
         results["categories"][cat] = stats
@@ -77,17 +86,20 @@ def analyze_dataset(raw_root: Path, categories: List[str]) -> Dict:
 
 
 def print_summary(results: Dict):
+    """
+    Afișează un rezumat al rezultatelor analizei.
+    """
     print("\n" + "="*60)
-    print("EDA SUMMARY")
+    print("REZUMAT EDA")
     print("="*60)
     
-    print(f"\nTotal samples: {results['total_samples']}")
-    print("\nClass balance:")
+    print(f"\nTotal eșantioane: {results['total_samples']}")
+    print("\nBalanța claselor:")
     for cat, count in results["class_balance"].items():
         print(f"  {cat}: {count}")
     
     print("\n" + "-"*60)
-    print("Per-category statistics:")
+    print("Statistici pe categorie:")
     print("-"*60)
     
     feature_names = [
@@ -98,24 +110,24 @@ def print_summary(results: Dict):
     
     for cat, stats in results["categories"].items():
         print(f"\n{cat.upper()}:")
-        print(f"  Samples: {stats.get('n_samples', 0)}")
-        print(f"  Shape per sample: {stats.get('shape_per_sample', [])}")
-        print(f"  NaN count: {stats.get('nan_count', 0)}")
-        print(f"  Inf count: {stats.get('inf_count', 0)}")
+        print(f"  Eșantioane: {stats.get('n_samples', 0)}")
+        print(f"  Formă per eșantion: {stats.get('shape_per_sample', [])}")
+        print(f"  Număr NaN: {stats.get('nan_count', 0)}")
+        print(f"  Număr Inf: {stats.get('inf_count', 0)}")
         print(f"  Total outliers (IQR): {stats.get('total_outliers', 0)}")
         
         if "mean" in stats:
-            print(f"\n  Feature-wise statistics:")
+            print(f"\n  Statistici pe caracteristică:")
             for i, fname in enumerate(feature_names):
                 print(f"    {fname}:")
-                print(f"      mean={stats['mean'][i]:.4f}, median={stats['median'][i]:.4f}, std={stats['std'][i]:.4f}")
+                print(f"      medie={stats['mean'][i]:.4f}, mediană={stats['median'][i]:.4f}, std={stats['std'][i]:.4f}")
                 print(f"      min={stats['min'][i]:.4f}, max={stats['max'][i]:.4f}")
                 print(f"      Q1={stats['q25'][i]:.4f}, Q3={stats['q75'][i]:.4f}")
                 print(f"      outliers={stats['outliers_per_feature'][i]}")
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Analiză Exploratorie a Datelor (EDA)")
     parser.add_argument("--raw_root", default="data/raw")
     parser.add_argument("--categories", nargs="*", default=["asphalt", "carpet", "concrete", "grass", "tile"])
     parser.add_argument("--output", default="docs/datasets/eda_results.json")
@@ -128,7 +140,7 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(results, f, indent=2)
-    print(f"\nResults saved to: {output_path}")
+    print(f"\nRezultate salvate în: {output_path}")
     
     print_summary(results)
 

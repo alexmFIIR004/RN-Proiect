@@ -64,7 +64,7 @@ project-name/
 
 **Valori lipsă:** 0% – niciun NaN
 **Valori infinite:** 0 – toate valorile sunt finite 
-**Consistență shape:** 100% – toate fișierele au shape uniform `(99, 10)` sau `(9,10)` pentru concrete
+**Consistență shape:** 100% – toate fișierele au shape uniform `(99, 10)`
 
 **Corelații între caracteristici:**
 * **Orientare (quaternion):** Componentele sunt parțial corelate (normalizare unitară)
@@ -73,7 +73,6 @@ project-name/
 
 ### 3.3 Probleme identificate
 
-**Format inconsistent:** Categoria `concrete` folosește shape `(9,10)` -este o diferență în modul de eșantionare (mai puține timestamp-uri).
 
 **Outlieri numerosi în asphalt:** 23,716 outlieri (4.5% din toate valorile) detectați prin IQR. Probabil cauzati de natura suprafetei in sine.
 
@@ -101,7 +100,6 @@ project-name/
   * Calibrare luminozitate cu praguri: `dark_min=0`, `light_max=255`
   * Normalizare în intervalul `[0,1]`
 * IMU (`*_imu.npy`):
-  * Reshape pentru `concrete`: din `(90,)` în `(9,10)`
 * Clase: echilibrate
 
 ### 4.3 Structurarea seturilor de date

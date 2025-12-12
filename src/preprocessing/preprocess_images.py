@@ -2,6 +2,9 @@ import cv2
 import numpy as np
 
 def preprocess_image(image_path, target_size=(224, 224), dark_min=0, light_max=255):
+    """
+    Preprocesează o imagine: citire, redimensionare, normalizare.
+    """
     img = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
     if img is None:
         return None
@@ -11,5 +14,8 @@ def preprocess_image(image_path, target_size=(224, 224), dark_min=0, light_max=2
     return np.clip(img, 0.0, 1.0)
 
 def save_processed_image(img_array, output_path):
+    """
+    Salvează o imagine preprocesată (array numpy) ca fișier imagine.
+    """
     img_uint8 = (img_array * 255).astype(np.uint8)
     cv2.imwrite(str(output_path), img_uint8)
