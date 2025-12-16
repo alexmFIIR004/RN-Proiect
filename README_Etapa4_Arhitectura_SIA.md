@@ -138,14 +138,19 @@ Starea **ERROR_HANDLER** este critică pentru a asigura că robotul nu se opreș
 **Scop:** Definire și compilare model RN.
 
 **Fișiere:**
-- `src/neural_network/model.py`: Definește arhitectura CNN 1D.
+- `src/neural_network/model.py`: Definește arhitectura Multi-Modală (CNN 1D + CNN 2D).
+- `src/neural_network/data_loader.py`: Helper pentru încărcarea perechilor Imagine+IMU.
 - `src/neural_network/config.py`: Parametrii de configurare.
 
 **Status:** Funcțional. Modelul se compilează și se salvează în `models/rn_floor_classifier_v0_skeleton.h5`.
 
 **Arhitectură:**
-- Input: (99, 10) - Serii de timp IMU.
-- Layers: Conv1D -> MaxPool -> Dropout -> Dense.
+- Input 1: (99, 10) - Serii de timp IMU.
+- Input 2: (224, 224, 1) - Imagini Grayscale.
+- Layers: 
+  - Ramura IMU: Conv1D -> MaxPool -> Dropout -> GlobalAvgPool
+  - Ramura Imagine: Conv2D -> MaxPool -> GlobalAvgPool
+  - Fuziune: Concatenate -> Dense
 - Output: 5 clase (Softmax).
 
 ### 4.3 Modul 3: Web Service / UI (`src/app/`)
@@ -188,7 +193,8 @@ RN-Proiect/
 │   │   ├── restructure_dataset.py    # Split & Merge
 │   │   └── README.md
 │   │
-│   ├── neural_network/               # ← MODUL 2
+│   ├── neural_network/               # ← MODUL 2 Multi-Modal
+│   │   ├── data_loader.py            # Helper incarcare date
 │   │   ├── model.py                  # Definitie RN
 │   │   └── config.py
 │   │

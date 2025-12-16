@@ -11,17 +11,17 @@ def export_generated_to_csv():
     # Sursa: datele generate (originale)
     generated_dir = os.path.join("data", "generated")
     
-    # Destinația: în folderul data_acquisition
+
     output_dir = os.path.join("src", "data_acquisition")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         
     output_csv = os.path.join(output_dir, "date_csv.csv")
     
-    print(f"Exporting generated data sample to {output_csv}...")
+    print(f"Exportare in {output_csv}...")
     
     all_data = []
-    classes = ["asphalt", "concrete", "grass", "tile"] # Clasele generate
+    classes = ["asphalt", "concrete", "grass", "tile"] 
     
     # Luăm toate mostrele generate sau un subset
     samples_per_class = 10 
@@ -63,7 +63,7 @@ def export_generated_to_csv():
     if all_data:
         df = pd.DataFrame(all_data)
         df.to_csv(output_csv, index=False)
-        print(f"Successfully exported {len(df)} samples to {output_csv}")
+        print(f"Am exportat cu succes {len(df)} in {output_csv}")
     else:
         print("No generated data found to export. Make sure you ran generate_all_data.py first.")
 

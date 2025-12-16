@@ -103,7 +103,7 @@ def augment_images():
                     original_out_name = f"generated_{cls}_{idx+1:03d}_original.jpg"
                     final_original.save(os.path.join(cls_dir, original_out_name))
                     
-                    # Pas 2: Aplicare Augmentări
+             
                     for aug_name, aug_func in augmentations:
                         # Aplicare transformare pe imaginea de bază mare
                         aug_img_large = aug_func(base_img)

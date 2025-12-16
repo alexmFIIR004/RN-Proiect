@@ -47,7 +47,7 @@ def restructure_dataset():
         # asphalt_0000001_img.jpg
         public_images.sort()
         
-        # Vrem să păstrăm 120.
+    
         samples_to_keep = 120
         
         if len(public_images) <= samples_to_keep:

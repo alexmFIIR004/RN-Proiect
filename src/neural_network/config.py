@@ -1,7 +1,8 @@
 # Configurare pentru Modulul Rețelei Neurale
 
 # Parametri date
-INPUT_SHAPE = (99, 10)
+INPUT_SHAPE_IMU = (99, 10)
+INPUT_SHAPE_IMG = (224, 224, 1) # Grayscale
 NUM_CLASSES = 5
 CLASS_NAMES = ['asphalt', 'carpet', 'concrete', 'grass', 'tile']
 

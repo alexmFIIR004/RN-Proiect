@@ -42,17 +42,29 @@ def main():
 
             time.sleep(0.5)
             
-  
-            input_data = np.random.randn(1, 99, 10)
+            # Generare date dummy pentru ambele intrări
+            input_imu = np.random.randn(1, 99, 10)
+            input_img = np.random.rand(1, 224, 224, 1) # Imagine dummy
             
-            st.subheader("1. Input Data Visualization (IMU Signals)")
-  
-            chart_data = pd.DataFrame(input_data[0], columns=[f"Feature_{i}" for i in range(10)])
-            st.line_chart(chart_data)
+            st.subheader("1. Input Data Visualization")
             
-           
-            prediction = model.predict(input_data)
-       
+            col_viz1, col_viz2 = st.columns(2)
+            
+            with col_viz1:
+                st.markdown("**IMU Signals**")
+                chart_data = pd.DataFrame(input_imu[0], columns=[f"Feature_{i}" for i in range(10)])
+                st.line_chart(chart_data)
+                
+            with col_viz2:
+                st.markdown("**Camera View (Simulated)**")
+                st.image(input_img[0, :, :, 0], caption="Simulated Surface Image", clamp=True)
+            
+            # Predicție cu modelul multi-modal (listă de input-uri)
+            try:
+                prediction = model.predict([input_imu, input_img])
+            except Exception as e:
+                st.error(f"Prediction Error: {e}")
+                st.stop()
 
             predicted_class_idx = np.argmax(prediction)
             predicted_class = CLASS_NAMES[predicted_class_idx]
