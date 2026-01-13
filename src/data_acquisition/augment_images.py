@@ -91,7 +91,7 @@ def augment_images():
             img_path = os.path.join(cls_dir, img_name)
             try:
                 with Image.open(img_path) as img:
-                    # Conversie la Grayscale ('L') pentru a se potrivi cu preprocesarea setului de date
+                    # Conversie la Grayscale ('L')
                     img = img.convert('L')
                     
                     # Pas 1: Pregătire Imagine Bază (400x400)

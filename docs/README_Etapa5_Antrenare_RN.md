@@ -4,7 +4,7 @@
 **Instituție:** POLITEHNICA București – FIIR  
 **Student:** Marinescu Alexandru  
 **Link Repository GitHub:** https://github.com/alexmFIIR004/RN-Proiect  
-**Data predării:** 16.12.2025
+**Data predării:** 13.01.2026
 
 ---
 
@@ -97,20 +97,17 @@ Completați tabelul cu hiperparametrii folosiți și **justificați fiecare aleg
 
 | **Hiperparametru** | **Valoare Aleasă** | **Justificare** |
 |--------------------|-------------------|-----------------|
-| Learning rate | Ex: 0.001 | Valoare standard pentru Adam optimizer, asigură convergență stabilă |
-| Batch size | Ex: 32 | Compromis memorie/stabilitate pentru N=[numărul vostru] samples |
-| Number of epochs | Ex: 50 | Cu early stopping după 10 epoci fără îmbunătățire |
-| Optimizer | Ex: Adam | Adaptive learning rate, potrivit pentru RN cu [numărul vostru] straturi |
-| Loss function | Ex: Categorical Crossentropy | Clasificare multi-class cu K=[numărul vostru] clase |
-| Activation functions | Ex: ReLU (hidden), Softmax (output) | ReLU pentru non-linearitate, Softmax pentru probabilități clase |
+| Learning rate | 0.001 (initial) | Valoare standard pentru Adam, cu ReduceLROnPlateau pentru ajustare fină.
+| Batch size | 32 | Optim pentru viteza de antrenare și stabilitate.
+| Number of epochs | 50 | Permite convergența completă; Early Stopping este activat - fara overfitting. 
+| Optimizer | Adam | Convergență rapidă și eficientă pentru arhitecturi CNN + MLP. 
+| Loss function | Sparse Categorical Crossentropy | Clasificare multi-class.
+| Activation functions | ReLU (hidden), Softmax (output) | ReLU previne gradient vanishing; Softmax pentru distribuție de probabilitate. |
 
 **Justificare detaliată batch size (exemplu):**
 ```
-Am ales batch_size=32 pentru că avem N=15,000 samples → 15,000/32 ≈ 469 iterații/epocă.
-Aceasta oferă un echilibru între:
-- Stabilitate gradient (batch prea mic → zgomot mare în gradient)
-- Memorie GPU (batch prea mare → out of memory)
-- Timp antrenare (batch 32 asigură convergență în ~50 epoci pentru problema noastră)
+Am ales batch_size=32 pentru datasetul nostru de dimensiune medie. 
+Acesta permite actualizări frecvente ale greutăților și se încadrează lejer în memoria GPU/CPU disponibilă.
 ```
 
 **Resurse învățare rapidă:**
@@ -167,31 +164,19 @@ Includeți **TOATE** cerințele Nivel 1 + următoarele:
 
 Antrenarea și inferența trebuie să respecte fluxul din State Machine-ul vostru definit în Etapa 4.
 
-**Exemplu pentru monitorizare vibrații lagăr:**
+**Implementare specifică proiectului (Surface Classification):**
 
-| **Stare din Etapa 4** | **Implementare în Etapa 5** |
-|-----------------------|-----------------------------|
-| `ACQUIRE_DATA` | Citire batch date din `data/train/` pentru antrenare |
-| `PREPROCESS` | Aplicare scaler salvat din `config/preprocessing_params.pkl` |
-| `RN_INFERENCE` | Forward pass cu model ANTRENAT (nu weights random) |
-| `THRESHOLD_CHECK` | Clasificare Normal/Uzură pe baza output RN antrenat |
-| `ALERT` | Trigger în UI bazat pe predicție modelului real |
+| **Stare din State Machine** | **Implementare în Etapa 5 (Cod)** |
+|-----------------------------|-----------------------------------|
+| `ACQUIRE_DATA` | `get_random_test_sample()` - simulează citirea senzorilor |
+| `PREPROCESS` | `preprocess_sample()` - aplică `StandardScaler` (IMU) și Resize (Img) |
+| `INFERENCE` | `model.predict()` - folosește `models/trained_model.h5` |
+| `CALCULATE_CONFIDENCE` | `confidence = prediction.max() * 100` |
+| `CHECK_THRESHOLD` | Verificare `if confidence < 70%` în `src/app/app.py` |
+| `ACT` (High Conf) | UI afișează "Confirmed" + Setări Robot |
+| `LOG` (Low Conf) | UI afișează Warning "Uncertain Prediction" |
 
-**În `src/app/main.py` (UI actualizat):**
-
-Verificați că **TOATE stările** din State Machine sunt implementate cu modelul antrenat:
-
-```python
-# ÎNAINTE (Etapa 4 - model dummy):
-model = keras.models.load_model('models/untrained_model.h5')  # weights random
-prediction = model.predict(input_scaled)  # output aproape aleator
-
-# ACUM (Etapa 5 - model antrenat):
-model = keras.models.load_model('models/trained_model.h5')  # weights antrenate
-prediction = model.predict(input_scaled)  # predicție REALĂ și corectă
-```
-
----
+**În `src/app/app.py`:**
 
 ## Analiză Erori în Context Industrial (OBLIGATORIU Nivel 2)
 
@@ -199,60 +184,39 @@ prediction = model.predict(input_scaled)  # predicție REALĂ și corectă
 
 ### 1. Pe ce clase greșește cel mai mult modelul?
 
-**Exemplu robotică (predicție traiectorii):**
+**Rezultat:**
 ```
-Confusion Matrix arată că modelul confundă 'viraj stânga' cu 'viraj dreapta' în 18% din cazuri.
-Cauză posibilă: Features-urile IMU (gyro_z) sunt simetrice pentru viraje în direcții opuse.
-```
-
-**Completați pentru proiectul vostru:**
-```
-[Descrieți confuziile principale între clase și cauzele posibile]
+Pe setul de test curent, modelul a obținut o acuratețe de 100%, fără confuzii.
+Totuși, într-un scenariu mai complex, se pot face confuzii între 'asphalt' și 'concrete' 
+din cauza texturii vizuale.
 ```
 
 ### 2. Ce caracteristici ale datelor cauzează erori?
 
-**Exemplu vibrații motor:**
+**Analiză:**
 ```
-Modelul eșuează când zgomotul de fond depășește 40% din amplitudinea semnalului util.
-În mediul industrial, acest nivel de zgomot apare când mai multe motoare funcționează simultan.
-```
-
-**Completați pentru proiectul vostru:**
-```
-[Identificați condițiile în care modelul are performanță slabă]
+Performanța perfectă sugerează că datele sintetice sunt foarte distincte. 
+În practică, zgomotul senzorului IMU (vibrații externe) și iluminarea variabilă 
+pentru cameră ar putea introduce erori, reducând distincțiile dintre clase.
 ```
 
 ### 3. Ce implicații are pentru aplicația industrială?
 
-**Exemplu detectare defecte sudură:**
+**Analiză:**
 ```
-FALSE NEGATIVES (defect nedetectat): CRITIC → risc rupere sudură în exploatare
-FALSE POSITIVES (alarmă falsă): ACCEPTABIL → piesa este re-inspectată manual
-
-Prioritate: Minimizare false negatives chiar dacă cresc false positives.
-Soluție: Ajustare threshold clasificare de la 0.5 → 0.3 pentru clasa 'defect'.
-```
-
-**Completați pentru proiectul vostru:**
-```
-[Analizați impactul erorilor în contextul aplicației voastre și prioritizați]
+O rată fals pozitivă (confundarea unei suprafețe alunecoase 'tile' cu una aderentă 'asphalt') 
+ar fi problematică pentru un robot mobil. Prioritatea este evitarea clasificării 
+eronate a suprafețelor cu coeficient de frecare scăzut.
 ```
 
 ### 4. Ce măsuri corective propuneți?
 
-**Exemplu clasificare imagini piese:**
+**Măsuri:**
 ```
-Măsuri corective:
-1. Colectare 500+ imagini adiționale pentru clasa minoritară 'zgârietură ușoară'
-2. Implementare filtrare Gaussian blur pentru reducere zgomot cameră industrială
-3. Augmentare perspective pentru simulare unghiuri camera variabile (±15°)
-4. Re-antrenare cu class weights: [1.0, 2.5, 1.2] pentru echilibrare
-```
-
-**Completați pentru proiectul vostru:**
-```
-[Propuneți minimum 3 măsuri concrete pentru îmbunătățire]
+1. Colectarea de date reale mai ample pentru a introduce variabilitate naturală.
+2. Augmentare mai agresivă a zgomotului pe semnalul IMU.
+3. Implementarea unui "confidence threshold" - dacă încrederea maximă < 70%, 
+   robotul să încetinească preventiv.
 ```
 
 ---
@@ -293,7 +257,7 @@ proiect-rn-[prenume-nume]/
 │   │   ├── train.py                   # NOU - Script antrenare
 │   │   └── evaluate.py                # NOU - Script evaluare
 │   └── app/
-│       └── main.py                    # ACTUALIZAT - încarcă model antrenat
+│       └── app.py                     # ACTUALIZAT - încarcă model antrenat
 │
 ├── models/
 │   ├── untrained_model.h5             # Din Etapa 4
@@ -350,7 +314,7 @@ python src/neural_network/train.py --epochs 50 --batch_size 32 --early_stopping
 # ...
 # Epoch 23/50 - loss: 0.3456 - accuracy: 0.8234 - val_loss: 0.4123 - val_accuracy: 0.7956
 # Early stopping triggered at epoch 23
-# ✓ Model saved to models/trained_model.h5
+# Model saved to models/trained_model.h5
 ```
 
 ### 4. Evaluare pe test set
@@ -361,14 +325,13 @@ python src/neural_network/evaluate.py --model models/trained_model.h5
 # Output așteptat:
 # Test Accuracy: 0.7823
 # Test F1-score (macro): 0.7456
-# ✓ Metrics saved to results/test_metrics.json
-# ✓ Confusion matrix saved to docs/confusion_matrix.png
+
 ```
 
 ### 5. Lansare UI cu model antrenat
 
 ```bash
-streamlit run src/app/main.py
+streamlit run src/app/app.py
 
 # SAU pentru LabVIEW:
 # Deschideți WebVI și rulați main.vi
@@ -385,61 +348,61 @@ streamlit run src/app/main.py
 ## Checklist Final – Bifați Totul Înainte de Predare
 
 ### Prerequisite Etapa 4 (verificare)
-- [ ] State Machine există și e documentat în `docs/state_machine.*`
-- [ ] Contribuție ≥40% date originale verificabilă în `data/generated/`
-- [ ] Cele 3 module din Etapa 4 funcționale
+- [DA] State Machine există și e documentat în `docs/state_machine.*`
+- [DA] Contribuție ≥40% date originale verificabilă în `data/generated/`
+- [DA] Cele 3 module din Etapa 4 funcționale
 
 ### Preprocesare și Date
-- [ ] Dataset combinat (vechi + nou) preprocesat (dacă ați adăugat date)
-- [ ] Split train/val/test: 70/15/15% (verificat dimensiuni fișiere)
-- [ ] Scaler din Etapa 3 folosit consistent (`config/preprocessing_params.pkl`)
+- [DA] Dataset combinat (vechi + nou) preprocesat (dacă ați adăugat date)
+- [DA] Split train/val/test: 70/15/15% (verificat dimensiuni fișiere)
+- [DA] Scaler din Etapa 3 folosit consistent (`config/preprocessing_params.pkl`)
 
 ### Antrenare Model - Nivel 1 (OBLIGATORIU)
-- [ ] Model antrenat de la ZERO (nu fine-tuning pe model pre-antrenat)
-- [ ] Minimum 10 epoci rulate (verificabil în `results/training_history.csv`)
-- [ ] Tabel hiperparametri + justificări completat în acest README
-- [ ] Metrici calculate pe test set: **Accuracy ≥65%**, **F1 ≥0.60**
-- [ ] Model salvat în `models/trained_model.h5` (sau .pt, .lvmodel)
-- [ ] `results/training_history.csv` există cu toate epoch-urile
+- [DA] Model antrenat de la ZERO (nu fine-tuning pe model pre-antrenat)
+- [DA] Minimum 10 epoci rulate (verificabil în `results/training_history.csv`)
+- [DA] Tabel hiperparametri + justificări completat în acest README
+- [DA] Metrici calculate pe test set: **Accuracy ≥65%**, **F1 ≥0.60**
+- [DA] Model salvat în `models/trained_model.h5` (sau .pt, .lvmodel)
+- [DA] `results/training_history.csv` există cu toate epoch-urile
 
 ### Integrare UI și Demonstrație - Nivel 1 (OBLIGATORIU)
-- [ ] Model ANTRENAT încărcat în UI din Etapa 4 (nu model dummy)
-- [ ] UI face inferență REALĂ cu predicții corecte
-- [ ] Screenshot inferență reală în `docs/screenshots/inference_real.png`
-- [ ] Verificat: predicțiile sunt diferite față de Etapa 4 (când erau random)
+- [DA] Model ANTRENAT încărcat în UI din Etapa 4 (nu model dummy)
+- [DA] UI face inferență REALĂ cu predicții corecte
+- [DA] Screenshot inferență reală în `docs/screenshots/inference_real.png`
+- [DA] Verificat: predicțiile sunt diferite față de Etapa 4 (când erau random)
 
 ### Documentație Nivel 2 (dacă aplicabil)
-- [ ] Early stopping implementat și documentat în cod
-- [ ] Learning rate scheduler folosit (ReduceLROnPlateau / StepLR)
-- [ ] Augmentări relevante domeniu aplicate (NU rotații simple!)
-- [ ] Grafic loss/val_loss salvat în `docs/loss_curve.png`
-- [ ] Analiză erori în context industrial completată (4 întrebări răspunse)
-- [ ] Metrici Nivel 2: **Accuracy ≥75%**, **F1 ≥0.70**
+- [DA] Early stopping implementat și documentat în cod
+- [DA] Learning rate scheduler folosit (ReduceLROnPlateau / StepLR)
+- [DA] Augmentări relevante domeniu aplicate (NU rotații simple!)
+- [DA] Grafic loss/val_loss salvat în `docs/loss_curve.png`
+- [DA] Analiză erori în context industrial completată (4 întrebări răspunse)
+- [DA] Metrici Nivel 2: **Accuracy 99%**, **F1 ≥0.99**
 
 ### Documentație Nivel 3 Bonus (dacă aplicabil)
-- [ ] Comparație 2+ arhitecturi (tabel comparativ + justificare)
-- [ ] Export ONNX/TFLite + benchmark latență (<50ms demonstrat)
-- [ ] Confusion matrix + analiză 5 exemple greșite cu implicații
+- [NU] Comparație 2+ arhitecturi (tabel comparativ + justificare)
+- [NU] Export ONNX/TFLite + benchmark latență (<50ms demonstrat)
+- [NU] Confusion matrix + analiză 5 exemple greșite cu implicații
 
 ### Verificări Tehnice
-- [ ] `requirements.txt` actualizat cu toate bibliotecile noi
-- [ ] Toate path-urile RELATIVE (nu absolute: `/Users/...` )
-- [ ] Cod nou comentat în limba română sau engleză (minimum 15%)
-- [ ] `git log` arată commit-uri incrementale (NU 1 commit gigantic)
-- [ ] Verificare anti-plagiat: toate punctele 1-5 respectate
+- [DA] `requirements.txt` actualizat cu toate bibliotecile noi
+- [DA] Toate path-urile RELATIVE (nu absolute: `/Users/...` )
+- [DA] Cod nou comentat în limba română sau engleză (minimum 15%)
+- [DA] `git log` arată commit-uri incrementale (NU 1 commit gigantic)
+- [DA] Verificare anti-plagiat: toate punctele 1-5 respectate
 
 ### Verificare State Machine (Etapa 4)
-- [ ] Fluxul de inferență respectă stările din State Machine
-- [ ] Toate stările critice (PREPROCESS, INFERENCE, ALERT) folosesc model antrenat
-- [ ] UI reflectă State Machine-ul pentru utilizatorul final
+- [DA] Fluxul de inferență respectă stările din State Machine
+- [DA] Toate stările critice (PREPROCESS, INFERENCE, ALERT) folosesc model antrenat
+- [DA] UI reflectă State Machine-ul pentru utilizatorul final
 
 ### Pre-Predare
-- [ ] `docs/etapa5_antrenare_model.md` completat cu TOATE secțiunile
-- [ ] Structură repository conformă: `docs/`, `results/`, `models/` actualizate
-- [ ] Commit: `"Etapa 5 completă – Accuracy=X.XX, F1=X.XX"`
-- [ ] Tag: `git tag -a v0.5-model-trained -m "Etapa 5 - Model antrenat"`
-- [ ] Push: `git push origin main --tags`
-- [ ] Repository accesibil (public sau privat cu acces profesori)
+- [DA] `docs/etapa5_antrenare_model.md` completat cu TOATE secțiunile
+- [DA] Structură repository conformă: `docs/`, `results/`, `models/` actualizate
+- [DA] Commit: `"Etapa 5 completă – Accuracy=X.XX, F1=X.XX"`
+- [DA] Tag: `git tag -a v0.5-model-trained -m "Etapa 5 - Model antrenat"`
+- [DA] Push: `git push origin main --tags`
+- [DA] Repository accesibil (public sau privat cu acces profesori)
 
 ---
 

@@ -106,8 +106,8 @@ def restructure_dataset():
 
     # 4. Re-împărțire Set de Date (Train/Val/Test)
     print("\n[4] Re-împărțire Set de Date (Train/Val/Test)...")
-    # Vrem să împărțim TOATE datele din processed acum.
-    # Total așteptat: 1000 eșantioane.
+    # Vrem să împărțim datele din processed acum.
+    # Total 1000 eșantioane.
     
     total_samples = 0
     
@@ -135,7 +135,7 @@ def restructure_dataset():
         print(f"  {cls}: Găsit {len(valid_samples)} eșantioane totale.")
         total_samples += len(valid_samples)
         
-        # Împărțire
+      
         # 70% Train, 15% Val, 15% Test
         train_imgs, test_val_imgs = train_test_split(valid_samples, test_size=0.3, random_state=42, shuffle=True)
         val_imgs, test_imgs = train_test_split(test_val_imgs, test_size=0.5, random_state=42, shuffle=True)

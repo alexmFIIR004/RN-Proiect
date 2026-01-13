@@ -19,15 +19,15 @@ def generate_evidence():
     if not os.path.exists(docs_dir):
         os.makedirs(docs_dir)
         
-    # 1. Generare Grafic Comparativ (Real vs Generat)
+   
     print("Se generează graficul comparativ Real vs Generat...")
     
-    # Selectăm o clasă pentru comparație
+   
     target_class = "concrete"
     
-    # Găsim o mostră reală
+   
     real_files = glob.glob(os.path.join(real_dir, target_class, "*_imu.npy"))
-    # Găsim o mostră generată
+   
     gen_files = glob.glob(os.path.join(generated_dir, target_class, "*_imu.npy"))
     
     if real_files and gen_files:
@@ -39,7 +39,7 @@ def generate_evidence():
         
         plt.figure(figsize=(12, 6))
         
-        # Plot Real (Acc Z - de obicei index 2 sau similar, plotăm index 0 pentru comparație generică)
+        
         plt.subplot(1, 2, 1)
         plt.plot(real_data[:min_len, 0], label='Real', color='blue')
         plt.title(f"Date Reale ({target_class})")
@@ -70,7 +70,7 @@ def generate_evidence():
     classes = ["asphalt", "concrete", "grass", "tile"]
     
     for cls in classes:
-        # Statistici Reale
+       
         r_files = glob.glob(os.path.join(real_dir, cls, "*_imu.npy"))
         if r_files:
             # Încărcăm câteva fișiere pentru a obține statistici medii

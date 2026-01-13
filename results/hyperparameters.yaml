@@ -1,0 +1,14 @@
+learning_rate:
+  initial: 0.001
+  scheduler: ReduceLROnPlateau
+batch_size: 32
+epochs: 50
+optimizer: Adam
+loss_function: Sparse Categorical Crossentropy
+early_stopping:
+  monitor: val_loss
+  patience: 5
+architecture:
+  imu_branch: Conv1D + MPL
+  img_branch: Conv2D + MLP
+  fusion: Concatenation

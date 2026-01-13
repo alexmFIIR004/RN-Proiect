@@ -5,15 +5,15 @@ import export_to_csv
 def main():
     print("=== Pornire Pipeline Generare Date (Etapa 4) ===")
     
-    # Pasul 1: Augmentare Imagini
+   
     print("\n--- Pasul 1: Augmentare Imagini ---")
     augment_images.augment_images()
     
-    # Pasul 2: Generare IMU Sintetic
+   
     print("\n--- Pasul 2: Generare Date IMU Sintetice ---")
     generate_imu.generate_synthetic_imu()
 
-    # Pasul 3: Export CSV (Data Logging)
+ 
     print("\n--- Pasul 3: Export CSV (Data Logging) ---")
     export_to_csv.export_generated_to_csv()
     

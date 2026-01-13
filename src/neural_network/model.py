@@ -60,8 +60,7 @@ def build_floor_classifier_model(input_shape_imu=(99, 10), input_shape_img=(224,
 
 if __name__ == "__main__":
     # Construire și afișare sumar model
-    # Notă: Când rulăm direct scriptul, config-ul importat relativ poate da eroare, 
-    # așa că folosim valori default sau un try-except pentru import.
+
     try:
         model = build_floor_classifier_model(
             input_shape_imu=config.INPUT_SHAPE_IMU,

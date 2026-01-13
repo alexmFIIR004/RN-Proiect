@@ -61,7 +61,7 @@ def generate_synthetic_imu():
         if not os.path.exists(cls_dir):
             continue
             
-        # Găsește toate imaginile (originale + modificate) - doar cele generate
+        # Găsește toate imaginile (originale + modificate)
         images = [f for f in os.listdir(cls_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png')) and f.startswith("generated_")]
         
         for img_name in images:

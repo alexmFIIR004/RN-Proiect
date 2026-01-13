@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.utils import load_img, img_to_array
 import glob
+import pickle
 from . import config
 
 class MultiModalDataLoader:
@@ -15,6 +16,17 @@ class MultiModalDataLoader:
         self.base_dir = base_dir
         self.class_names = config.CLASS_NAMES
         self.class_indices = {name: i for i, name in enumerate(self.class_names)}
+        self.scaler = self._load_scaler()
+
+    def _load_scaler(self):
+        scaler_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config', 'preprocessing_params.pkl')
+        if os.path.exists(scaler_path):
+            with open(scaler_path, 'rb') as f:
+                print(f"Loading scaler from {scaler_path}")
+                return pickle.load(f)
+        else:
+            print(f"Warning: Scaler not found at {scaler_path}. IMU data will not be normalized.")
+            return None
         
     def load_data(self, split='train'):
         """
@@ -45,10 +57,15 @@ class MultiModalDataLoader:
                 try:
                     imu_data = np.load(imu_path)
                     
-                    # Verificare consistență shape
+                    # Verificare consistență "shape"
                     if imu_data.shape != config.INPUT_SHAPE_IMU:
                         
                         continue
+
+                  
+                    if self.scaler:
+                       
+                        imu_data = self.scaler.transform(imu_data)
                         
                     # 2. Găsire și Conversie Imagine Pereche
                     # Numele este de tipul: asphalt_001_imu.npy -> asphalt_001_img.jpg
@@ -60,7 +77,7 @@ class MultiModalDataLoader:
                         continue
                         
                     # Conversie Imagine -> Numere (Tensor)
-                    # load_img face resize automat
+                    # load_img face resize
                     img = load_img(img_path, color_mode='grayscale', target_size=(config.INPUT_SHAPE_IMG[0], config.INPUT_SHAPE_IMG[1]))
                     img_array = img_to_array(img) # Devine (224, 224, 1) cu valori float32
                     

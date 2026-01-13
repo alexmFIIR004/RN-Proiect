@@ -30,11 +30,10 @@ def preprocess_imu(imu_path, target_length=99):
     if current_length != target_length:
         # Calculare factori de zoom pentru fiecare axă
         # Axa 0 (timp): target / current
-        # Axa 1 (features): 1.0 (nu schimbăm numărul de caracteristici)
+        # Axa 1 (features): 1.0
         zoom_factor = [target_length / current_length, 1.0]
         
-        # Aplicare interpolare spline
-        # Folosim order=1 (liniar) pentru a evita overshoot-uri la semnale zgomotoase
+        # Aplicare interpolare
         data = zoom(data, zoom_factor, order=1)
         
     return data

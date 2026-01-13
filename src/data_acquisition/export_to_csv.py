@@ -8,7 +8,7 @@ def export_generated_to_csv():
     """
     Exportă un subset din datele GENERATE (originale) într-un fișier CSV.
     """
-    # Sursa: datele generate (originale)
+  
     generated_dir = os.path.join("data", "generated")
     
 
