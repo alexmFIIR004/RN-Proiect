@@ -13,7 +13,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
 sys.path.append(project_root)
 
-MODEL_PATH = "models/trained_model.h5"  # Loaded trained model
+MODEL_PATH = "models/optimized_model.h5"  # Loaded optimized model from Stage 6
 SCALER_PATH = "config/preprocessing_params.pkl"
 DATA_DIR = os.path.join(project_root, "data", "test") # Use test data for demo
 CLASS_NAMES = ['asphalt', 'carpet', 'concrete', 'grass', 'tile']

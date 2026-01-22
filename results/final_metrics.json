@@ -1,0 +1,13 @@
+{
+    "model": "optimized_model.h5",
+    "test_accuracy": 0.875,
+    "test_f1_macro": 0.8764017887856896,
+    "experiment_id": "Exp_Baseline",
+    "parameters": {
+        "id": "Exp_Baseline",
+        "lr": 0.001,
+        "dropout": 0.3,
+        "batch": 32,
+        "desc": "Baseline configuration"
+    }
+}

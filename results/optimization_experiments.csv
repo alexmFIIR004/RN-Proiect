@@ -1,0 +1,5 @@
+Exp_ID,Changes,Accuracy,F1_Score,Time_min,Observations
+Exp_Baseline,Baseline configuration,0.875,0.8764,0.32,Loss: 0.5637
+Exp_HighReg,High Dropout (0.6) for robustness,0.7841,0.7722,0.33,Loss: 0.5903
+Exp_LowLR,Low Learning Rate (Fine tuning),0.6136,0.5986,0.29,Loss: 1.1326
+Exp_BigBatch,Larger Batch Size,0.7159,0.7038,0.28,Loss: 0.5754

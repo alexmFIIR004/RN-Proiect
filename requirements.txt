@@ -4,3 +4,6 @@ pillow
 streamlit
 tensorflow
 pandas
+
+seaborn
+matplotlib

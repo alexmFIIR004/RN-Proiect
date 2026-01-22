@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.keras.utils import load_img, img_to_array
 import glob
 import pickle
-from . import config
+import config
 
 class MultiModalDataLoader:
     """
